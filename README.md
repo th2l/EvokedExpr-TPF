@@ -8,7 +8,7 @@ EEV 2021 challenge: https://sites.google.com/view/auvi-cvpr2021/challenge?authus
 ## Feature extraction
 * *Dockerfile*: create docker image for feature extraction with TensorFlow Hub.
 * Adjust *line 20* in *feature_extractor.py* and *line 19* in *utils.py*, *dataset_root_path* variable to correct folder on your computer. This folder need to contained videos in EEV with 3 separated folders (train, val, test).
-* The structure of *dataset_root_path* folder as in my code.
+* The structure of *dataset_root_path* folder as in my code. Note that eev folder is from https://github.com/google-research-datasets/eev
 ```
 /mnt/Work/Dataset/EEV/
 └───dataset
