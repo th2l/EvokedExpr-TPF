@@ -1,7 +1,7 @@
 Temporal Convolution Networks with Positional Encoding for Evoked Expression Estimation
 ---
 
-:1st_place_medal: **1<sup>st</sup> place** in EEV challenge @ CPVR2021: https://sites.google.com/view/auvi-cvpr2021/challenge?authuser=0 
+:1st_place_medal: **1<sup>st</sup> place** in EEV challenge - [AUVi Workshop @ CPVR2021](https://sites.google.com/view/auvi-cvpr2021/challenge?authuser=0) 
 
 *To be updated more later*
 
