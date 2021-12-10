@@ -1,37 +1,59 @@
-## Welcome to GitHub Pages
+Temporal Convolution Networks with Positional Encoding for Evoked Expression Estimation
+---
 
-You can use the [editor on GitHub](https://github.com/th2l/EvokedExpression-tcnpe/edit/gh-pages/index.md) to maintain and preview the content for your website in Markdown files.
+:1st_place_medal: **1<sup>st</sup> place** in EEV challenge @ CPVR2021: https://sites.google.com/view/auvi-cvpr2021/challenge?authuser=0 
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
+*To be updated more later*
 
-### Markdown
-
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
-
-```markdown
-Syntax highlighted code block
-
-# Header 1
-## Header 2
-### Header 3
-
-- Bulleted
-- List
-
-1. Numbered
-2. List
-
-**Bold** and _Italic_ and `Code` text
-
-[Link](url) and ![Image](src)
+## Feature extraction
+* *Dockerfile*: create docker image for feature extraction with TensorFlow Hub.
+* Adjust *line 20* in *feature_extractor.py* and *line 19* in *utils.py*, *dataset_root_path* variable to correct folder on your computer. This folder need to contained videos in EEV with 3 separated folders (train, val, test).
+* The structure of *dataset_root_path* folder as in my code. Note that eev folder is from https://github.com/google-research-datasets/eev
 ```
-
-For more details see [Basic writing and formatting syntax](https://docs.github.com/en/github/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax).
-
-### Jekyll Themes
-
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/th2l/EvokedExpression-tcnpe/settings/pages). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
-
-### Support or Contact
-
-Having trouble with Pages? Check out our [documentation](https://docs.github.com/categories/github-pages-basics/) or [contact support](https://support.github.com/contact) and we’ll help you sort it out.
+/mnt/Work/Dataset/EEV/
+└───dataset
+│   └───train
+│       │   __18H35fPo8.mp4
+│       │   _-6yhPXr_Hw.mp4
+│       │   ...
+│   └───val
+│       │   _-91_iXATY8.mp4
+│       │   _-zO8Gg2Kxw.mp4
+│       │   ...
+│   └───test
+│       │   _EARmKIxjxQ.mp4
+│       │   _FJgj1e_xo8.mp4
+│       │   ...
+│   
+└───eev
+    │   test.csv
+    │   train.csv
+    │   val.csv
+```
+## Network training
+* *environment.yml*: contain list of packages (using anaconda) for network training ``` conda env create -f environment.yml ```
+* Adjust *line 25* in *main.py*, *root_path* parameter to correct folder that contain feature extracted from above.
+* Adjust *line 184* in *models.py*, *dataset_root_path* to the same value with *root_path* in *main.py*
+* The structure of *root_path* folder as in my code. Note that eev folder is from https://github.com/google-research-datasets/eev
+```
+/mnt/sXProject/EvokedExpression/
+└───dataset
+│   └───features_v2
+│       └───train
+│           │   __18H35fPo8.pt
+│           │   _-6yhPXr_Hw.pt
+│           │   ...
+│       └───val
+│           │   _-91_iXATY8.pt
+│           │   _-zO8Gg2Kxw.pt
+│           │   ...
+│       └───test
+│           │   _EARmKIxjxQ.pt
+│           │   _FJgj1e_xo8.pt
+│           │   ...
+│   
+└───eev
+    │   test.csv
+    │   train.csv
+    │   val.csv
+```
