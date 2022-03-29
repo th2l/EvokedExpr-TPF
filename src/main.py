@@ -2,109 +2,113 @@
 Author: Huynh Van Thong
 Department of AI Convergence, Chonnam Natl. Univ.
 """
-import argparse
+
+import os.path as osp
 import glob
-import os.path
-import pathlib
 import shutil
-import sys
+import time
 
 import torch
 from pytorch_lightning.callbacks import ModelCheckpoint
-from torchvision import transforms
-from torch.utils.data import DataLoader
-from utils import EEVdataset, ToTensor, eev_collatefn
 import pytorch_lightning as pl
-from models import EEVModel
 from pytorch_lightning.loggers import TensorBoardLogger
 
-
-def get_dataloader(emotion_index=-1, feature='resnet'):
-    loaders = {}
-    for split in ['train', 'val', 'test']:
-        current_split = EEVdataset(root_path='/mnt/sXProject/EvokedExpression/', split=split,
-                                   feature=feature, emotion_index=emotion_index,
-                                   transforms=transforms.Compose([ToTensor()]))
-        shuffle = (split == 'train')
-        loaders[split] = DataLoader(current_split, batch_size=1, shuffle=shuffle, num_workers=20,  # pin_memory=True,
-                                    prefetch_factor=2, collate_fn=None)
-    #     for b in loaders[split]:
-    #         # print(b['effb0'].shape, b['resnet'].shape, b['audio'].shape, b['mask'].shape)
-    #         tmp = b['audio']
-    # #         # if tmp.shape[1] == 1:
-    # #         #     print(split, ' ', b['file_id'])
-    # # #
-    # sys.exit(0)
-    return loaders
+from core import EEVModel, EEVDataModule, config
+from core.config import cfg
+from core.io import pathmgr
 
 
 def copyfiles(source_dir, dest_dir, ext='*.py'):
-    files = glob.iglob(os.path.join(source_dir, ext))
+    # Copy source files or compress to zip
+    files = glob.iglob(osp.join(source_dir, ext))
     for file in files:
-        if os.path.isfile(file):
+        if osp.isfile(file):
             shutil.copy2(file, dest_dir)
 
+    if osp.isdir(osp.join(source_dir, 'core')) and not osp.isdir(osp.join(dest_dir, 'core')):
+        shutil.copytree(osp.join(source_dir, 'core'), osp.join(dest_dir, 'core'), copy_function=shutil.copy2)
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Evoked Expression')
-    parser.add_argument('--dir', type=str, default='./trial', help="Training directory")
-    parser.add_argument('--lr_init', type=float, default=1e-3, help="Initial learning rate")
-    parser.add_argument('--batch_size', type=int, default=32, help="Batch size")
-    parser.add_argument('--seed', type=int, default=1, help="Random seed")
-    parser.add_argument('--epoch', type=int, default=5, help="Number of epochs")
-    parser.add_argument('--opt', type=str, default='sgd', help="Optimizer")
-    parser.add_argument('--feature', type=str, default='resnet', help="Feature type (audio, resnet, effb0")
-    parser.add_argument('--emotion', type=int, default=0, help="Emotion index to be learned (0-14) or all (-1)")
+    config.load_cfg_fom_args("EEV 2021 Challenges")
+    config.assert_and_infer_cfg()
+    cfg.freeze()
 
-    args = parser.parse_args()
+    pl.seed_everything(2)  # cfg.RNG_SEED
 
-    if args.feature not in ['resnet', 'audio', 'effb0']:
-        raise ValueError('Do not support {} at this time.'.format(args.feature))
-    if args.emotion not in range(-1, 15):
-        raise ValueError('Do not support emotion {} at this time.'.format(args.emotion))
+    # torch.backends.cudnn.benchmark = cfg.CUDNN.BENCHMARK
+    st_time = time.time()
+    # Ensure that the output dir exists
+    pathmgr.mkdirs(cfg.OUT_DIR)
+    cfg_file = config.dump_cfg()
+    copyfiles(source_dir='./', dest_dir=cfg.OUT_DIR)
+    copyfiles(source_dir='./', dest_dir=cfg.OUT_DIR, ext='.sh')
+    copyfiles(source_dir='./', dest_dir=cfg.OUT_DIR, ext='.txt')
 
-    tcn_in = {'resnet': 2048, 'audio': 2048, 'effb0': 1280}
-    if args.emotion == -1:
-        num_outputs = 15
-        emotion_index = -1
+    if cfg.LOGGER == 'TensorBoard':
+        logger = TensorBoardLogger(cfg.OUT_DIR, name='{}_emo'.format('full'), version='_'.join(cfg.MODEL.FEATURES))
     else:
+        raise ValueError('Do not implement with {} logger yet.'.format(cfg.LOGGER))
+
+    params = None  # Default is None
+    num_outputs = 15 if cfg.DATA_NAME == 'eev' else 2  # TODO
+    if cfg.DATA_LOADER.EMO_INDEX > -1:
         num_outputs = 1
-        emotion_index = args.emotion
 
-    pl.seed_everything(args.seed)
+    if cfg.TEST.WEIGHTS != '':
+        result_dir = cfg.OUT_DIR
+    else:
+        result_dir = ''
 
-    emotions = ['amusement', 'anger', 'awe', 'concentration', 'confusion', 'contempt', 'contentment', 'disappointment',
-                'doubt', 'elation', 'interest', 'pain', 'sadness', 'surprise', 'triumph']
+    eev_model = EEVModel(params=params, num_outputs=num_outputs, features=cfg.MODEL.FEATURES, result_dir=result_dir,
+                         dataset_name=cfg.DATA_NAME, emotion_index=cfg.DATA_LOADER.EMO_INDEX)
+    eev_data = EEVDataModule(cfg.DATA_LOADER.DATA_DIR, features=cfg.MODEL.FEATURES, dataset_name=cfg.DATA_NAME,
+                             emotion_index=cfg.DATA_LOADER.EMO_INDEX, drop_perc=cfg.TRAIN.DROP_PERC)
 
-    if num_outputs == 15:
-        save_dir = args.dir  # os.path.join(args.dir, 'emo_{}'.format(emotions[emo_ind]))
-        pathlib.Path(save_dir).mkdir(exist_ok=True, parents=True)
-        logger = TensorBoardLogger(save_dir, name='{}_emo'.format('full'), version=args.feature)
-        copyfiles('./', save_dir, ext='*.txt')
-        copyfiles('./', save_dir, ext='*.sh')
-        copyfiles('./', save_dir, ext='*.py')
+    fast_dev_run = cfg.FAST_DEV_RUN
+    max_epochs = cfg.OPTIM.MAX_EPOCH if cfg.TEST.WEIGHTS == '' else 1
+    if cfg.DATA_NAME == 'eev':
+        check_val_every_n_epoch = 1
+    elif 'mediaeval' in cfg.DATA_NAME:
+        check_val_every_n_epoch = cfg.OPTIM.MAX_EPOCH
+    else:
+        check_val_every_n_epoch = 1
 
-        if args.feature == 'effb0':
-            tcn_channels = (512, )
-        elif args.feature == 'audio':
-            tcn_channels = (512, 512, )
-        else:
-            tcn_channels = (128, )
+    ckpt_callbacks = ModelCheckpoint(monitor='val_loss', mode="min", save_top_k=1, save_last=True)
+    trainer = pl.Trainer(gpus=1, fast_dev_run=fast_dev_run, accumulate_grad_batches=cfg.TRAIN.ACCUM_GRAD_BATCHES,
+                         max_epochs=max_epochs, deterministic=True, callbacks=ckpt_callbacks,
+                         num_sanity_val_steps=0, progress_bar_refresh_rate=0, logger=logger,
+                         stochastic_weight_avg=cfg.OPTIM.USE_SWA, weights_summary=None,
+                         check_val_every_n_epoch=check_val_every_n_epoch, gradient_clip_val=10. if num_outputs<15 else 0)
 
-        model = EEVModel(num_outputs=15, tcn_in=tcn_in[args.feature] + 0, tcn_channels=tcn_channels, tcn_kernel_size=3,
-                         dropout=0.3, mtloss=False,
-                         opt=args.opt, lr=args.lr_init, use_norm=True, features_dropout=0., temporal_size=-1,
-                         num_dilations=4, features=args.feature, emotion_index=-1, warmup_steps=200,
-                         accum_grad=args.batch_size)
-        fast_dev_run = False
-        loaders = get_dataloader(emotion_index=-1, feature=args.feature)
-        checkpoint_callback = ModelCheckpoint(monitor='val_loss', mode="min", save_top_k=1, save_last=True)
-        trainer = pl.Trainer(gpus=1, accumulate_grad_batches=args.batch_size, max_epochs=args.epoch,
-                             fast_dev_run=fast_dev_run,
-                             deterministic=True, callbacks=checkpoint_callback, num_sanity_val_steps=0,
-                             progress_bar_refresh_rate=0, logger=logger)
-        trainer.fit(model, loaders['train'], loaders['val'])
-        print('Best model scores: ', checkpoint_callback.best_model_score)
+    if cfg.TEST.WEIGHTS == '':
+        trainer.fit(eev_model, datamodule=eev_data)
         if not fast_dev_run:
-            ckpt_path = None  # checkpoint_callback.best_model_path
-            trainer.test(test_dataloaders=loaders['test'], ckpt_path=ckpt_path)
+            print('Best scores: ', ckpt_callbacks.best_model_score)
+
+            ckpt_path = None  # None  # ckpt_callbacks.best_model_path
+            print('Generate test predictions 1')
+            trainer.test(datamodule=eev_data, ckpt_path=ckpt_path)
+
+            if cfg.OPTIM.USE_SWA:
+                ckpt_path = ckpt_callbacks.last_model_path.replace('last', 'swa_last')
+                trainer.save_checkpoint(ckpt_path)
+            else:
+                ckpt_path = ckpt_callbacks.last_model_path
+
+    else:
+        # Do for testing
+        eev_data.setup()
+        # Load pre-trained weights
+        pretrained_weights = torch.load(cfg.TEST.WEIGHTS)['state_dict']
+        eev_model.load_state_dict(pretrained_weights, strict=True)
+
+        # trainer.setup(eev_model, stage='test')
+        print('Do testing ', cfg.TEST.WEIGHTS)
+
+        print('Generate validation prediction')
+        trainer.test(model=eev_model, test_dataloaders=eev_data.val_dataloader(), ckpt_path=None)
+        # trainer.test(datamodule=eev_data, ckpt_path=cfg.TEST.WEIGHTS)
+        print('Generate testing prediction')
+        trainer.test(test_dataloaders=eev_data.test_dataloader(), ckpt_path=cfg.TEST.WEIGHTS)
+
+    print('Finished. Total time: {} minutes.'.format((time.time() - st_time) / 60))

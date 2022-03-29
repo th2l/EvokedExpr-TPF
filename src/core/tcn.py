@@ -1,3 +1,6 @@
+"""
+Original source https://github.com/locuslab/TCN/blob/master/TCN/tcn.py
+"""
 import torch
 import torch.nn as nn
 from torch.nn.utils import weight_norm
@@ -82,7 +85,7 @@ class TemporalConvNet(nn.Module):
             in_channels = num_inputs if i == 0 else num_channels[i - 1]
             out_channels = num_channels[i]
             layers += [TemporalBlock(in_channels, out_channels, kernel_size, stride=1, dilation=dilation_size,
-                                     padding=(kernel_size - 1) * dilation_size, dropout=dropout, use_norm=False)]
+                                     padding=(kernel_size - 1) * dilation_size, dropout=dropout, use_norm=use_norm)]
 
         self.network = nn.Sequential(*layers)
 

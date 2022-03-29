@@ -1,0 +1,37 @@
+MODEL:
+  TEMPORAL_TYPE: 'tcn'
+  USE_POSITION: True
+  FC_HIDDEN: 128
+  FEATURES: ['effb0', ]
+TCN:
+  NUM_STACK: 2
+  NUM_CHANNELS: 512
+  DILATIONS: 4
+  K_SIZE: 3
+  DROPOUT: 0.3
+  NORM: False
+LSTM:
+  HIDDEN_SIZE: 512
+  NUM_LAYERS: 2
+  BIDIREC: False
+  DROPOUT: 0.3
+OPTIM:
+  BASE_LR: 0.005
+  MAX_EPOCH: 20
+  LR_POLICY: 'none'
+  USE_SWA: True
+TRAIN:
+  ACCUM_GRAD_BATCHES: 32
+TEST:
+  WEIGHTS: ''
+DATA_LOADER:
+  DATA_DIR: '/mnt/sXProject/EvokedExpression/dataset/mediaeval18/'
+  NUM_WORKERS: 20
+  PIN_MEMORY: False
+
+DATA_NAME: 'mediaeval18'
+VERBOSE: True
+OUT_DIR: './tmp'
+RNG_SEED: 1
+FAST_DEV_RUN: 2
+LOGGER: "TensorBoard"
