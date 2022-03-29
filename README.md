@@ -3,7 +3,7 @@ Temporal Convolution Networks with Positional Encoding for Evoked Expression Est
 
 :1st_place_medal: **1<sup>st</sup> place** in EEV 2021 challenge: https://sites.google.com/view/auvi-cvpr2021/challenge?authuser=0 
 
-*To be updated more later*
+*Updated code and model checkpoints for [EEV 2021 dataset](https://github.com/google-research-datasets/eev) and [LIRIS-ACCEDE MediaEval 2018](https://liris-accede.ec-lyon.fr/database.php)*. Paper submitted.
 
 ## Feature extraction
 * *Dockerfile*: create docker image for feature extraction with TensorFlow Hub.
@@ -56,4 +56,15 @@ Temporal Convolution Networks with Positional Encoding for Evoked Expression Est
     │   test.csv
     │   train.csv
     │   val.csv
+```
+
+Please cite related papers (dataset, backbone) and our paper
+
+```
+@article{huynh2021temporal,
+  title={Temporal convolution networks with positional encoding for evoked expression estimation},
+  author={Huynh, Van Thong and Lee, Guee-Sang and Yang, Hyung-Jeong and Kim, Soo-Huyng},
+  journal={arXiv preprint arXiv:2106.08596},
+  year={2021}
+}
 ```
