@@ -12,5 +12,6 @@ Results on [EEV 2021 dataset](https://github.com/google-research-datasets/eev)
 Results on [LIRIS-ACCEDE MediaEval 2018](https://liris-accede.ec-lyon.fr/database.php)
 
 <p align="center">
-  <img src="https://user-images.githubusercontent.com/46513130/160516888-8fcf914d-3aac-4247-b832-ee12ab8fbe2b.png" alt="Results on LIRIS-ACCEDE MediaEval 2018"/>
+  <img src="https://github.com/th2l/EvokedExpr-TPF/assets/46513130/9bcf3d7d-9193-4a35-a691-fee2bc5e1001" alt="Results on LIRIS-ACCEDE MediaEval 2018"/>
 </p>
+
