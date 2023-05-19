@@ -1,7 +1,5 @@
-Temporal Convolution Networks with Positional Encoding for Evoked Expression Estimation
+Prediction of Evoked Expression from Videos with Temporal Position Fusion
 ---
-
-:1st_place_medal: **1<sup>st</sup> place** in EEV 2021 challenge: https://sites.google.com/view/auvi-cvpr2021/challenge?authuser=0 
 
 *Updated code and model checkpoints for [EEV 2021 dataset](https://github.com/google-research-datasets/eev) and [LIRIS-ACCEDE MediaEval 2018](https://liris-accede.ec-lyon.fr/database.php)*. Paper submitted.
 
