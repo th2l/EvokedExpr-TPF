@@ -56,13 +56,17 @@ Prediction of Evoked Expression from Videos with Temporal Position Fusion
     │   val.csv
 ```
 
-Please cite related papers (dataset, backbone) and our paper
+Please cite related papers (dataset, backbone) and our paper https://www.sciencedirect.com/science/article/pii/S016786552300199X
 
 ```
-@article{huynh2021temporal,
-  title={Temporal convolution networks with positional encoding for evoked expression estimation},
-  author={Huynh, Van Thong and Lee, Guee-Sang and Yang, Hyung-Jeong and Kim, Soo-Huyng},
-  journal={arXiv preprint arXiv:2106.08596},
-  year={2021}
+@article{HUYNH2023245,
+    title = {Prediction of evoked expression from videos with temporal position fusion},
+    journal = {Pattern Recognition Letters},
+    volume = {172},
+    pages = {245-251},
+    year = {2023},
+    issn = {0167-8655},
+    doi = {https://doi.org/10.1016/j.patrec.2023.07.002},
+    author = {Van Thong Huynh and Hyung-Jeong Yang and Guee-Sang Lee and Soo-Hyung Kim},
 }
 ```
